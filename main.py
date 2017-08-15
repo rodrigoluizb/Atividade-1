@@ -13,6 +13,7 @@ class setpoint(Thread):
     def run(self):
         while True:
             threshold = raw_input("Entre o valor do setpoint da temperatura \n")
+            self.serialPort.write('w')
             self.serialPort.write(str(threshold))
 
 def main():
@@ -35,7 +36,11 @@ def main():
         hora = time.strftime("%H:%M:%S", time.localtime())
         hour_list.append(hora)
         x.append(t)
-        y.append(np.random.random())
+        arduino.write('r')
+        tempS = arduino.readline()
+        tempF = float(tempS)
+        print tempF
+        y.append(tempF)
         t = t + 1
         plt.xticks(x, hour_list)
         plt.plot(x, y, "r-*")
