@@ -1,9 +1,7 @@
-const int ledPin1 = 2, ledPin2 = 3, ledPin3 = 4;
 const int ledPin = LED_BUILTIN;
 float tempF = 30.0;
-int numBytes = 0, tempI = 0, setPointI;
 char oper;
-String setPointS = "", tempS = "";
+String setPointS = "";
 float setPointF = 0.0;
 
 void setup() {
@@ -16,7 +14,6 @@ void loop() {
   // put your main code here, to run repeatedly:
   while(!Serial.available());
   digitalWrite(ledPin1, LOW);
-  numBytes = Serial.available();
   oper = Serial.read();
   if (oper == 'r'){
     Serial.print(tempF);
