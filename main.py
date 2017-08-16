@@ -15,16 +15,18 @@ class setpoint(Thread):
             threshold = raw_input("Entre o valor do setpoint da temperatura \n")
             self.serialPort.write('w')
             self.serialPort.write(str(threshold))
+            self.serialPort.write('\n')
 
 def main():
     plt.ion()
     baudRate = 9600
-    port = "/dev/tty.Bluetooth-Incoming-Port"
-    arduino = serial.Serial(port, baudRate)
-
+    port = "COM4"
+    arduino = serial.Serial(port, baudRate, timeout=3)
+    time.sleep(1)
+    arduino.write('r\n')
     a = setpoint(arduino)
     a.start();
-
+    tempF = 0.0
     x = list()
     y = list()
     t = 1
@@ -36,15 +38,17 @@ def main():
         hora = time.strftime("%H:%M:%S", time.localtime())
         hour_list.append(hora)
         x.append(t)
-        arduino.write('r')
+        data = arduino.write('r\n',)
         tempS = arduino.readline()
-        tempF = float(tempS)
-        print tempF
-        y.append(tempF)
-        t = t + 1
-        plt.xticks(x, hour_list)
-        plt.plot(x, y, "r-*")
-        plt.pause(1)
+        try:
+            tempF = float(tempS)
+            y.append(tempF)
+            t = t + 1
+            plt.xticks(x, hour_list)
+            plt.plot(x, y, "r-*")
+            plt.pause(5)
+        except ValueError:
+            print "nada"
 
 if __name__ == "__main__":
     main()
