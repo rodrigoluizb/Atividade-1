@@ -5,27 +5,26 @@
 #define ACT 9               // Pin connected to optocoupler
 #define NUMSAMPLES 5        // Number of samples, for a oversampling.
 
-const int ledPin = LED_BUILTIN;  //Led for debugging
+const int ledPin = LED_BUILTIN;  //Led for alarm indication
 float tempF = 30.0;         // Default threshold value for temperature control
 char oper;                  // Char that will receive either w (receive setpoint from python) or r (to read the temperature from thermistor)
 String setPointS = "";      // Auxiliar string
 float setPointF = 0.0;      // Setpoint value
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(ledPin, OUTPUT);
-  pinMode(THERMISTORPIN,INPUT);
-  pinMode(ONVOLT,OUTPUT);
-  pinMode(ACT,OUTPUT);
+  Serial.begin(9600);       // Initialize serial port with baud rate = 9600
+  pinMode(ledPin, OUTPUT);  // Alarm led pin as output
+  pinMode(THERMISTORPIN,INPUT);  //Thermistor analog pin as input
+  pinMode(ONVOLT,OUTPUT);       // Pin that turn the thermistor on as output
+  pinMode(ACT,OUTPUT);          // Pin that control the actuator as output
 
-  digitalWrite(ONVOLT,LOW);
-  digitalWrite(ACT,LOW);
-  digitalWrite(ledPin, LOW);
+  digitalWrite(ONVOLT,LOW);     // Initialize the thermistor as OFF
+  digitalWrite(ACT,LOW);        // Initialize the actuator as OFF
+  digitalWrite(ledPin, LOW);    // Initialize the led as OFF
 }
 
 void loop() {
   while(!Serial.available());   //Read operation character
-  digitalWrite(ledPin1, LOW);
   oper = Serial.read();
   if (oper == 'r'){
     uint8_t i;
@@ -51,7 +50,7 @@ void loop() {
     setPointF = setPointS.toFloat();
   }
   if (tempF > setPointF){
-    digitalWrite(ledPin3, HIGH);
+    digitalWrite(ledPin, HIGH);
   }
   else{
     digitalWrite(ledPin, LOW);
