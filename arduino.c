@@ -40,9 +40,8 @@ void loop() {
       }
     digitalWrite(ONVOLT,LOW);
     average /= NUMSAMPLES; //value in number
-    average = 5*average/1023; //value in voltage
+    average = 3.3*average/1023; //value in voltage
     // convert the value to temperature
-    average = (VINIT - average)*35/(VINIT - V35);
     // Send value to python
     Serial.print(average);
     Serial.print('\n');
