@@ -4,12 +4,14 @@
 #define V35 0.5             // Voltage @ 35oC
 #define ACT 9               // Pin connected to optocoupler
 #define NUMSAMPLES 5        // Number of samples, for a oversampling.
+#define ledPin 2
 
-const int ledPin = LED_BUILTIN;  //Led for alarm indication
-float tempF = 30.0;         // Default threshold value for temperature control
+uint16_t samples[NUMSAMPLES];
+
 char oper;                  // Char that will receive either w (receive setpoint from python) or r (to read the temperature from thermistor)
 String setPointS = "";      // Auxiliar string
-float setPointF = 0.0;      // Setpoint value
+float setPointF = 30.0;      // Setpoint value
+float average = 0.0;
 
 void setup() {
   Serial.begin(9600);       // Initialize serial port with baud rate = 9600
@@ -28,7 +30,7 @@ void loop() {
   oper = Serial.read();
   if (oper == 'r'){
     uint8_t i;
-    float average=0;
+    average = 0.0;
     // take N samples in a row, with a slight delay
     for (i=0; i< NUMSAMPLES; i++) {
       digitalWrite(ONVOLT,HIGH);
@@ -49,10 +51,14 @@ void loop() {
     setPointS = Serial.readStringUntil('\n');
     setPointF = setPointS.toFloat();
   }
-  if (tempF > setPointF){
+  if (average > setPointF){
     digitalWrite(ledPin, HIGH);
   }
   else{
     digitalWrite(ledPin, LOW);
   }
+  if (average > (setPointF + 1.0))
+    digitalWrite(ACT,HIGH);
+  else if(average < (setPointF - 1.0))
+    digitalWrite(ACT,LOW);
 }
