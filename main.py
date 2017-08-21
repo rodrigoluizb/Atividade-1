@@ -12,7 +12,7 @@ Function to convert the voltage read by the ADC to Temperature in Celsius
 
 def convertToTemp(voutF, calValues):
     V2 = voutF / 2.13 + calValues[0]
-    Rt = (10e4 * (V2)) / (3.3 - V2)
+    Rt = (10e3 * (V2)) / (3.3 - V2)
     tempF = float(func(Rt, calValues[1], calValues[2]))
 
     return tempF
@@ -60,7 +60,7 @@ def cal(serialPort):
             try:  # try;except statement to bypass any error during communication
                 voutF = float(voutS)  # Convert string to float
                 V2 = voutF / 2.13 + vOffset
-                Rt = (10e4 * (V2)) / (3.3 - V2)
+                Rt = (10e3 * (V2)) / (3.3 - V2)
                 T = np.append(T, [tempF])
                 R = np.append(R, [Rt])
             except ValueError:
