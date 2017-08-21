@@ -10,9 +10,9 @@ Function to convert the voltage read by the ADC to Temperature in Celsius
 """
 
 
-def convertToTemp(VoutF, calValues):
-    V2 = VoutF / 2.13 + calValues[0]
-    Rt = (10e3 * (V2)) / (3.3 - V2)
+def convertToTemp(voutF, calValues):
+    V2 = voutF / 2.13 + calValues[0]
+    Rt = (10e4 * (V2)) / (3.3 - V2)
     tempF = float(func(Rt, calValues[1], calValues[2]))
 
     return tempF
@@ -45,27 +45,29 @@ def cal(serialPort):
             calValues.append(float(value))
     except IOError:
         print "Arquivo nao existente. Entrando no modo de calibracao:"
+        vOffset = float(raw_input("Entre com o valor do offset da tensao de calibracao\n"))
         file = open('cal.values', 'w')
         T = np.array([])  # y-axis
         R = np.array([])  # x-axis
-        string = raw_input("Entre com o valor de temperatura (em float).\nOu qualquer letra para sair da calibracao\n")
+        tempS = raw_input("Entre com o valor de temperatura (em float).\nOu qualquer letra para sair da calibracao\n")
         while True:
             try:
-                stringF = float(string)
+                tempF = float(tempS)
             except:
                 break
-
             data = serialPort.write('r\n')  # send read data command
-            tempS = serialPort.readline()  # read data sent back by the arduino
+            voutS = serialPort.readline()  # read data sent back by the arduino
             try:  # try;except statement to bypass any error during communication
-                tempF = float(tempS)  # Convert string to float
-                T = np.append(T, [stringF])
-                R = np.append(R, [tempF])
+                voutF = float(voutS)  # Convert string to float
+                V2 = voutF / 2.13 + vOffset
+                Rt = (10e4 * (V2)) / (3.3 - V2)
+                T = np.append(T, [tempF])
+                R = np.append(R, [Rt])
             except ValueError:
                 print "Nenhum valor foi recebido do Arduino"  # Write on terminal if an exception was thrown
-            string = raw_input(
+            tempS = raw_input(
                 "Entre com o novo valor de temperatura (em float).\nOu qualquer letra para sair da calibracao\n")
-        vOffset = raw_input("Entre com o valor do offset da tensao de calibracao\n")
+        
         print str(T)
         print str(R)
 
@@ -107,7 +109,7 @@ def main():
     plt.ion()
     baudRate = 9600
     port = raw_input("Entre com o nome da porta serial do arduino\n")
-    arduino = serial.Serial(port, baudRate)
+    arduino = serial.Serial(port, baudRate, timeout=5)                  #ATENCAO: timeout e necessario para utilizacao da funcao readline
     time.sleep(1)
     arduino.write('r\n')
     calValues = cal(arduino)
@@ -127,6 +129,7 @@ def main():
         try:
             voutF = float(voutS)
             tempF = convertToTemp(voutF, calValues)
+            print "A temperatura medida foi:"+str(tempF)+"\n"
             y.append(tempF)
             hora = time.strftime("%H:%M:%S", time.localtime())
             hour_list.append(hora)
