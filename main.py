@@ -17,6 +17,12 @@ def convertToTemp(voutF, calValues):
 
     return tempF
 
+def convertToVolt(tempF, calValues):
+    Rt = float(funcInv(tempF, calValues[1], calValues[2]))
+    V2 = 3.3 * (Rt / (Rt + 10e3))
+    voutF = 2.13 * (V2 - calValues[0])
+    return voutF
+
 
 """
     create a function to fit with your data. A  and B are the coefficients that curve_fit will calculate for you. 
@@ -28,7 +34,8 @@ def convertToTemp(voutF, calValues):
 def func(R, A, B):
     return A + B * np.log(R)
 
-
+def funcInv(T,A,B):
+    return np.exp((T-A)/B)
 # Function that checks for a calibration file for creating interpolating curve (T(R))
 # if there is no file, enter calibration routine and creates it.
 def cal(serialPort):
@@ -93,29 +100,31 @@ def cal(serialPort):
 
     return calValues
 
-class setpoint(Thread):
-    def __init__(self, serialPort):
-        Thread.__init__(self)
-        self.serialPort = serialPort
+# class setpoint(Thread):
+#    def __init__(self, serialPort, calValues):
+#        Thread.__init__(self)
+#        self.serialPort = serialPort
+#        self.calValues = calValues
 
-    def run(self):
-        while True:
-            threshold = raw_input("Entre o valor do setpoint da temperatura \n")
-            self.serialPort.write('w')
-            self.serialPort.write(str(threshold))
-            self.serialPort.write('\n')
+#    def run(self):
+#        while True:
+#            threshold = raw_input("Entre o valor do setpoint da temperatura \n")
+#            self.serialPort.write('w')
+#            self.serialPort.write(str(convertToVolt(float(threshold), self.calValues)))
+#            self.serialPort.write('\n)
 
 def main():
     plt.ion()
     baudRate = 9600
     port = raw_input("Entre com o nome da porta serial do arduino\n")
+    setpointT = raw_input("Entre com o setpoint da temperatura\n")
+    setpointT = float(setpointT)
     arduino = serial.Serial(port, baudRate, timeout=5)                  #ATENCAO: timeout e necessario para utilizacao da funcao readline
     time.sleep(1)
     arduino.write('r\n')
     calValues = cal(arduino)
-    a = setpoint(arduino)
-    a.start()
-    voutF = 0.0
+    #a = setpoint(arduino, calValues)
+    #a.start()
     x = list()
     y = list()
     t = 1
@@ -129,7 +138,15 @@ def main():
         try:
             voutF = float(voutS)
             tempF = convertToTemp(voutF, calValues)
-            print "A temperatura medida foi:"+str(tempF)+"\n"
+            #print "A temperatura medida foi:"+str(tempF)+"\n"
+            if tempF > (setpointT + 1):
+                arduino.write('w1\n')
+            elif tempF < (setpointT - 1):
+                arduino.write('w0\n')
+            elif tempF > setpointT:
+                arduino.write('w3\n')
+            elif tempF < setpointT:
+                arduino.write('w2\n')
             y.append(tempF)
             hora = time.strftime("%H:%M:%S", time.localtime())
             hour_list.append(hora)

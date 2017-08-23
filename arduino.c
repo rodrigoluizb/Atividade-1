@@ -10,7 +10,7 @@ uint16_t samples[NUMSAMPLES];
 
 char oper;                  // Char that will receive either w (receive setpoint from python) or r (to read the temperature from thermistor)
 String setPointS = "";      // Auxiliar string
-float setPointF = 30.0;      // Setpoint value
+float setPointI = 0;      // Setpoint value
 float average = 0.0;
 
 void setup() {
@@ -23,6 +23,7 @@ void setup() {
   digitalWrite(ONVOLT,LOW);     // Initialize the thermistor as OFF
   digitalWrite(ACT,LOW);        // Initialize the actuator as OFF
   digitalWrite(ledPin, LOW);    // Initialize the led as OFF
+  analogReference(EXTERNAL);
 }
 
 void loop() {
@@ -48,16 +49,14 @@ void loop() {
   }
   else if(oper == 'w'){
     setPointS = Serial.readStringUntil('\n');
-    setPointF = setPointS.toFloat();
+    setPointI = setPointS.toInt();
   }
-  if (average > setPointF){
-    digitalWrite(ledPin, HIGH);
-  }
-  else{
-    digitalWrite(ledPin, LOW);
-  }
-  if (average > (setPointF + 1.0))
+  if (setPointI == 0)
     digitalWrite(ACT,HIGH);
-  else if(average < (setPointF - 1.0))
+  else if (setPointI == 1)
     digitalWrite(ACT,LOW);
+  else if (setPointI == 3)
+    digitalWrite(ledPin, HIGH);
+  else if (setPointI == 2)
+    digitalWrite(ledPin, LOW);
 }
